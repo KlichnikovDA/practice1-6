@@ -9,7 +9,7 @@ namespace PracticeTask6
     class Program
     {
         // Ввод необходимых параметров
-        static void InputParams(out ushort Count, out double Accuracy)
+        static void InputParams(out ushort CountTotal, out ushort CountComparer, out double Comparer)
         {
             // Флаг правильности ввода
             bool CorrectInput;
@@ -17,89 +17,100 @@ namespace PracticeTask6
             // Ввод количества элементов
             do
             {
-                Console.WriteLine("Введите количество элементов последовательности, которые нужно вычислить:");
-                CorrectInput = UInt16.TryParse(Console.ReadLine(), out Count);
+                Console.WriteLine("Введите количество всех элементов последовательности, которые нужно вычислить:");
+                CorrectInput = UInt16.TryParse(Console.ReadLine(), out CountTotal);
                 if (!CorrectInput)
                     Console.WriteLine("Требуется ввести целое неотрицательное число.");
             } while (!CorrectInput);
 
-            // Ввод требуемой точности
+            // Ввод числа для сравнения
             do
             {
-                Console.WriteLine("Введите требуемую точность вычислений:");
-                CorrectInput = Double.TryParse(Console.ReadLine(), out Accuracy) && Accuracy > 0;
+                Console.WriteLine("Введите число, с которым будут сравниваться элементы последовательности:");
+                CorrectInput = Double.TryParse(Console.ReadLine(), out Comparer);
                 if (!CorrectInput)
-                    Console.WriteLine("Требуется ввести положительное вещественное число.");
+                    Console.WriteLine("Требуется ввести вещественное число.");
+            } while (!CorrectInput);
+
+            // Ввод количества элементов больших заданного числа
+            do
+            {
+                Console.WriteLine("Введите количество элементов последовательности, больших введенного числа, которые нужно вычислить:");
+                CorrectInput = UInt16.TryParse(Console.ReadLine(), out CountComparer);
+                if (!CorrectInput)
+                    Console.WriteLine("Требуется ввести целое неотрицательное число.");
             } while (!CorrectInput);
         }
 
         // Ввод первых <= 3 элементов последовательности
-        static void InputFirstElements(ref double[] Elements, ushort ElementsCount)
+        static void InputFirstElements(ref double[] Elements, ushort CountTotal, ushort CountComparer, 
+            ref ushort CurrentTotal, ref ushort CurrentComparer, double Comparer)
         {
-            switch (ElementsCount)
+            for (CurrentTotal = 0; CurrentTotal < 3  && CurrentTotal < CountTotal && CurrentComparer < CountComparer; CurrentTotal++)
             {
-                case 1:
-                    Console.Write("A1 = ");
-                    Elements[0] = Double.Parse(Console.ReadLine());
-                    break;
-                case 2:
-                    Console.Write("A1 = ");
-                    Elements[0] = Double.Parse(Console.ReadLine());
-                    Console.Write("A2 = ");
-                    Elements[1] = Double.Parse(Console.ReadLine());
-                    break;
-                default:
-                    Console.Write("A1 = ");
-                    Elements[0] = Double.Parse(Console.ReadLine());
-                    Console.Write("A2 = ");
-                    Elements[1] = Double.Parse(Console.ReadLine());
-                    Console.Write("A3 = ");
-                    Elements[2] = Double.Parse(Console.ReadLine());
-                    break;
+                // Флаг правильности ввода
+                bool ok;
+                do
+                {
+                    Console.Write("Введите {0}-й член последовательности: ", CurrentTotal + 1);
+                    ok = Double.TryParse(Console.ReadLine(), out Elements[CurrentTotal]);
+                    if (!ok)
+                        Console.WriteLine("Требуется ввести вещественное число.");
+                    else
+                        if (Elements[CurrentTotal] > Comparer)
+                        CurrentComparer++;
+                } while (!ok);
             }
+
+            if (CurrentTotal == CountTotal)
+                Console.WriteLine("Вычислено требуемое количество элементов.");
+            else if (CurrentComparer == CountComparer)
+                Console.WriteLine("Вычислено требуемое количество элементов, больших {0}.", Comparer);
         }
 
         // Вычисление последовательности
-        static void Calculate(ref double[] Array, ushort CountTotal, ushort CountCurrent, double Accuracy)
+        static void Calculate(ref double[] Array, ushort CountTotal, ushort CountComparer, ushort CurrentTotal, 
+            ushort CurrentComparer, double Comparer)
         {
-            Array[CountCurrent-1] = (7.0 / 3 * Array[CountCurrent - 2] + Array[CountCurrent-3]) / 2.0 * Array[CountCurrent-4];
-            Console.WriteLine("A{0} = {1}", CountCurrent + 1, Array[CountCurrent]);
-            if (CountCurrent < CountTotal && Math.Abs(Array[CountCurrent]) > Accuracy)
-                Calculate(ref Array, CountTotal, (ushort)(CountCurrent + 1), Accuracy);
+            if (CurrentTotal == CountTotal)
+                Console.WriteLine("Вычислено требуемое количество элементов.");
+            else if (CurrentComparer == CountComparer)
+                Console.WriteLine("Вычислено требуемое количество элементов, больших {0}.", Comparer);
             else
-                if (CountCurrent == CountTotal)
-                    Console.WriteLine("Вычислено указанное количество элементов последовательности.");
-                else
-                    Console.WriteLine("Достигнута требуемая точность вычислений.");
+            {
+                Array[CurrentTotal] = (7.0 / 3 * Array[CurrentTotal - 1] + Array[CurrentTotal - 2]) / 2.0 * Array[CurrentTotal - 3];
+                Console.WriteLine("A{0} = {1}", CurrentTotal + 1, Array[CurrentTotal]);
+                if (Array[CurrentTotal] > Comparer)
+                    CurrentComparer++;
+                CurrentTotal++;
+                Calculate(ref Array, CountTotal, CountComparer, CurrentTotal, CurrentComparer, Comparer);
+            }
         }
 
         static void Main(string[] args)
         {
             // Параметры последовательности
-            // Количество элементов
-            ushort Count;
-            // Точность вычислений
-            double Accuracy;
+
+            // Общее количество элементов
+            ushort CountTotal, CountComparer;
+            // Текущее количество элементов
+            ushort CurrentTotal = 0, CurrentComparer = 0;
+            // Число для сравнения
+            double Comparer;
 
             // Ввод параметров
-            InputParams(out Count, out Accuracy);
+            InputParams(out CountTotal, out CountComparer, out Comparer);
             
             // Массив элементов
-            double[] Elements = new double[Count];
+            double[] Elements = new double[CountTotal];
 
-            if (Count == 0)
+            if (CountTotal == 0)
                 Console.WriteLine("Последовательность пуста.");
             else
             {
-                InputFirstElements(ref Elements, Count);
-                if (Count <= 3)
-                {
-                    for (int i = 0; i < Count; i++)
-                        Console.WriteLine("A{0} = {1}", i + 1, Elements[i]);
-                    Console.WriteLine("");
-                }
-                else
-                    Calculate(ref Elements, Count, 3, Accuracy);
+                InputFirstElements(ref Elements, CountTotal, CountComparer, ref CurrentTotal, ref CurrentComparer, Comparer);
+                if (CurrentTotal < CountTotal && CurrentComparer < CountComparer)
+                    Calculate(ref Elements, CountTotal, CountComparer, CurrentTotal, CurrentComparer, Comparer);
             }
 
             Console.WriteLine("Нажмите любую клавишу...");
